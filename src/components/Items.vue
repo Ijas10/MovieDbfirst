@@ -18,21 +18,10 @@ export default {
   },
 
   methods: {
-    ...mapActions(["fetchingAddedDetails"]),
+    ...mapActions(["addingFavouritesAction"]),
     imgUrlFixer() {
       return "https://image.tmdb.org/t/p/original" + this.imgUrl;
     },
-    addingFavourites1() {
-      // this.addingFavouritesMutations(this.id);
-      // this.$store.state.favMovies.push({
-      //   title: this.title,
-      //   imgUrl: this.imgUrl,
-      //   rating: this.rating,
-      //   id: this.id,
-      // });
-      this.fetchingAddedDetails(this.id);
-    },
-    
   },
 };
 </script>
@@ -41,16 +30,15 @@ export default {
   <li class="listEl">
     <router-link class="routerLink" :to="/movies/ + this.id">
       <img :src="imgUrlFixer()" class="posterImg" />
-
       <p class="title">{{ title }}</p>
 
       <div>
         <p class="rating">Rating - {{ rating }}</p>
       </div>
     </router-link>
-    <button type="button" class="fav" @click="addingFavourites1">
-      <p v-if="!marked">Mark Favorite</p>
-      <p v-else>Marked</p>
+    <button type="button" class="fav" @click="addingFavouritesAction({ id })">
+      <p>{{ marked ? "Added" : "Add" }}</p>
+
       <HeartIcon class="icons1" />
     </button>
   </li>

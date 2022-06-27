@@ -1,14 +1,12 @@
 <script>
 import HeadTab from "../components/HeadTab.vue";
+import { mapGetters } from "vuex";
 import { RouterLink } from "vue-router";
 export default {
   components: { HeadTab },
 
-  mounted() {
-    console.log(
-      "State returned from store",
-      this.$store.state.allMovies.filter((each) => each.marked === "false")
-    );
+  computed: {
+    ...mapGetters(["favoriteMovies"]),
   },
   methods: {
     imgUrlFixer(img) {
@@ -30,21 +28,23 @@ export default {
     <div class="about">
       <h1 class="head">Favourite Movies</h1>
       <h4 class="head2">Your top favorite movies</h4>
-      <h5 v-if="this.$store.state.favMovies.length === 0" class="conditional">
+      <h5 v-if="favoriteMovies.length === 0" class="conditional">
         Add your favorite movies to view them in the favorite movie list
       </h5>
-      <ul v-if="this.$store.state.favMovies.length !== 0" class="unorderList">
-        <li class="listEl" v-for="item in unorderListOF()" v-bind:key="item.id">
+      <ul v-if="favoriteMovies.length !== 0" class="unorderList">
+        <li class="listEl" v-for="item in favoriteMovies" v-bind:key="item.id">
           <router-link class="routerLink" :to="/movies/ + item.id">
             <div>
               <img
-                v-bind:src="'https://image.tmdb.org/t/p/original' + item.imgUrl"
+                v-bind:src="
+                  'https://image.tmdb.org/t/p/original' + item.poster_path
+                "
                 class="posterImg"
               />
               <p class="title">{{ item.title }}</p>
             </div>
             <div>
-              <p class="rating">Rating - {{ item.rating }}</p>
+              <p class="rating">Rating - {{ item.vote_average }}</p>
             </div>
           </router-link>
         </li>

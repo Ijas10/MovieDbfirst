@@ -1,13 +1,22 @@
 <script>
 import HeadTab from "../components/HeadTab.vue";
+import { mapActions, mapGetters } from "vuex";
 import StarIcon from "vue-material-design-icons/Star.vue";
 
 export default {
   data() {
     return {
       final: {},
-      marked : false,
     };
+  },
+  computed: {
+    ...mapGetters(["favoriteMovies"]),
+    checkingIF() {
+      const ids = this.favoriteMovies.map((each) => each.id);
+      const finding = ids.includes(parseInt(this.$route.params.id));
+      console.log("finalres", finding);
+      return finding;
+    },
   },
   components: {
     HeadTab,
@@ -26,41 +35,44 @@ export default {
     imgUrlFixer() {
       return "https://image.tmdb.org/t/p/original" + this.final.backdrop_path;
     },
-    addingFavourites1() {
-      this.marked = !this.marked;
-      this.$store.state.favMovies.push({
-        title: this.final.title,
-        imgUrl: this.final.poster_path,
-        rating: this.final.vote_average,
-        id: this.final.id,
-      });
-    },
+    ...mapActions(["addingFavouritesAction"]),
   },
 };
 </script>
 
 <template>
-  <HeadTab />
-  <div class="unorderList1 about">
-    <img v-bind:src="imgUrlFixer()" class="imgPOster" />
-
-    <div class="cont1">
-      <h1>{{ final.title }}</h1>
-      <h3 class="head5">
-        Rating : {{ final.vote_average }}  <span ><StarIcon class="star" /></span>
-      </h3>
-      <h3>Release Date : {{ final.release_date }}</h3>
-      <h2>Overview</h2>
-      <p class="para">{{ final.overview }}</p>
-      <button class="addBtn" @click="addingFavourites1" type="button">
-      <p v-if="!marked">Add to favorites</p>
-      <p v-else>Added</p>
-      </button>
+  <div>
+    <HeadTab />
+    <div class="unorderList1 about">
+      <img v-bind:src="imgUrlFixer()" class="imgPOster" />
+      <div class="cont1">
+        <h1>{{ final.title }}</h1>
+        <h3 class="head5">
+          Rating : {{ final.vote_average }}
+          <span><StarIcon class="star" /></span>
+        </h3>
+        <h3>Release Date : {{ final.release_date }}</h3>
+        <h2>Overview</h2>
+        <p class="para">{{ final.overview }}</p>
+        <button
+          v-if="!checkingIF"
+          class="addBtn"
+          @click="addingFavouritesAction({ id: final.id })"
+          type="button"
+        >
+          Add to Favourites
+        </button>
+        <button
+          v-else
+          class="addBtn"
+          @click="addingFavouritesAction({ id: final.id })"
+          type="button"
+        >
+          Remove from favorites
+        </button>
+      </div>
     </div>
   </div>
-  <div class="divCont"></div>
-
- 
 </template>
 
 <style scoped>
@@ -70,21 +82,19 @@ export default {
 }
 .head5 {
   display: flex;
-  
 }
 .addBtn {
   background-color: blue;
   border-radius: 4px;
-  border:0px;
-  height:40px;
-  width:200px;
-  color:white;
+  border: 0px;
+  height: 40px;
+  width: 200px;
+  color: white;
   font-weight: 700;
   cursor: pointer;
 }
 .star {
-  color:yellow;
-  
+  color: yellow;
 }
 .para {
   color: grey;
@@ -108,7 +118,6 @@ export default {
   color: white;
   display: flex;
   padding-left: 40px;
-  
 
   background-color: black;
   border-top-left-radius: 10px;

@@ -2,77 +2,70 @@
 import HeadTab from "../components/HeadTab.vue";
 import Items from "../components/Items.vue";
 import MagnifyIcon from "vue-material-design-icons/Magnify.vue";
+import PulseLoader from "vue-spinner/src/PulseLoader.vue";
 import { mapActions, mapGetters } from "vuex";
 export default {
   components: {
     HeadTab,
     Items,
     MagnifyIcon,
+    PulseLoader,
   },
 
   data() {
     return {
-      listOfMovies: [],
       ratingInitial: "high",
       sortingInitial: "ascending",
       searchInput: "",
     };
   },
-  computed: mapGetters(["allMoviesGetter"]),
+  computed: mapGetters([
+    "allMoviesGetter",
+    "loadingOrNot",
+    "seachInputGetter",
+    "searchFilterGetter",
+  ]),
   methods: {
-    ...mapActions(["fetchingApi"]),
+    ...mapActions([
+      "fetchingApi",
+      "sortingBasedOnRatingAction",
+      "sortingBasedOnRatingActionHigh",
+      "changeSearch",
+    ]),
     changeRating(event) {
       this.ratingInitial = event.target.value;
       if (this.ratingInitial === "low") {
-        const ratingHighTo = this.listOfMovies.sort(
+        const ratingHighTo = this.$store.state.allMovies.sort(
           (a, b) => a.vote_average - b.vote_average
         );
         console.log(ratingHighTo);
       } else {
-        this.listOfMovies.sort((a, b) => b.vote_average - a.vote_average);
+        this.$store.state.allMovies.sort(
+          (a, b) => b.vote_average - a.vote_average
+        );
       }
       console.log(this.ratingInitial);
     },
-    changeSearchContents(event) {
-      this.searchInput = event.target.value;
-      this.listOfMovies = this.listOfMovies.filter((each) =>
-        each.title.toLowerCase().includes(this.searchInput.toLowerCase())
-      );
+    changeSearchMain(event) {
+      const values = event.target.value;
+      console.log(values, "values");
+      this.changeSearch(values);
     },
-
     changeRatingA_Z(event) {
       this.sortingInitial = event.target.value;
       console.log(this.sortingInitial);
       if (this.sortingInitial === "ascending") {
-        this.listOfMovies.sort(function (a, b) {
-          const nameA = a.title.toUpperCase(); // ignore upper and lowercase
-          const nameB = b.title.toUpperCase(); // ignore upper and lowercase
-          if (nameA < nameB) {
-            return -1;
-          }
-          if (nameA > nameB) {
-            return 1;
-          }
-          return 0;
-        });
+        this.sortingBasedOnRatingAction();
       } else {
-        this.listOfMovies.sort(function (a, b) {
-          const nameA = a.title.toUpperCase(); // ignore upper and lowercase
-          const nameB = b.title.toUpperCase(); // ignore upper and lowercase
-          if (nameB < nameA) {
-            return -1;
-          }
-          if (nameB > nameA) {
-            return 1;
-          }
-          return 0;
-        });
+        this.sortingBasedOnRatingActionHigh();
       }
     },
   },
 
-  mounted() {
-    this.fetchingApi()
+  created() {
+    if (this.allMoviesGetter.length === 0) {
+      this.fetchingApi();
+    }
   },
 };
 </script>
@@ -86,7 +79,16 @@ export default {
         The most popular movies that everyone must have seen atleast once
       </h3>
       <div class="flexBox">
-
+        <div class="searchCont">
+          <input
+            type="search"
+            placeholder="Search"
+            class="inputSearch"
+            :value="seachInputGetter"
+            @input="changeSearchMain"
+          />
+          <MagnifyIcon />
+        </div>
         <div class="contSelect">
           <select class="selectOption" @change="changeRating">
             <option value="high">Rating(high-low)</option>
@@ -98,10 +100,10 @@ export default {
           </select>
         </div>
       </div>
-
-      <ul v-if="listOfMovies.lenght !== 0" class="unorderList">
+      <PulseLoader class="loader" v-if="!loadingOrNot" />
+      <ul v-else class="unorderList">
         <Items
-          v-for="item in this.$store.state.allMovies"
+          v-for="item in searchFilterGetter"
           :title="item.title"
           :imgUrl="item.poster_path"
           :genre="item.genre"
@@ -113,9 +115,9 @@ export default {
           :releasedate="item.release_date"
         />
       </ul>
-      <h1 class="error" v-if="listOfMovies.length === 0">
-        Not getting the expected result?.Try something else
-      </h1>
+      <h2 class="headWarn" v-if="searchFilterGetter.length === 0">
+        Oops!👀. Not Finding the expected results?.Try typing something else.
+      </h2>
     </div>
   </div>
 </template>
@@ -123,6 +125,16 @@ export default {
 <style>
 * {
   box-sizing: border-box;
+}
+.loader {
+  height: 50vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.headWarn {
+  text-align: center;
+  margin-top: 60px;
 }
 .main {
   padding-left: 40px;
@@ -137,6 +149,7 @@ export default {
   font-size: 17px;
   padding: 10px;
   border-radius: 4px;
+  cursor: pointer;
 }
 .error {
   text-align: center;
@@ -150,7 +163,6 @@ export default {
 .searchCont {
   border: 1px solid black;
   display: flex;
-  flex-direction: column;
   align-items: center;
 }
 .head {
@@ -167,12 +179,13 @@ export default {
 }
 .flexBox {
   display: flex;
-  flex-direction: column;
+  
   align-items: center;
   justify-content: space-between;
 }
 .contSelect {
   align-self: flex-end;
+  cursor: pointer;
 }
 .unorderList {
   display: flex;
